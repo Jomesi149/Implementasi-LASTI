@@ -9,10 +9,11 @@ import (
 	"github.com/go-chi/cors"
 
 	"github.com/Jomesi149/Implementasi-LASTI/backend/internal/account"
+	"github.com/Jomesi149/Implementasi-LASTI/backend/internal/transaction"
 )
 
 // NewRouter wires middlewares and HTTP handlers.
-func NewRouter(accountHandler *account.HTTPHandler) http.Handler {
+func NewRouter(accountHandler *account.HTTPHandler, transactionHandler *transaction.HTTPHandler) http.Handler {
 	r := chi.NewRouter()
 
 	r.Use(cors.Handler(cors.Options{
@@ -37,6 +38,7 @@ func NewRouter(accountHandler *account.HTTPHandler) http.Handler {
 
 	r.Route("/api/v1", func(r chi.Router) {
 		accountHandler.RegisterRoutes(r)
+		transactionHandler.RegisterRoutes(r)
 	})
 
 	return r

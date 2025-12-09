@@ -18,6 +18,7 @@ import (
 	"github.com/Jomesi149/Implementasi-LASTI/backend/internal/security"
 	"github.com/Jomesi149/Implementasi-LASTI/backend/internal/server"
 	"github.com/Jomesi149/Implementasi-LASTI/backend/internal/token"
+	"github.com/Jomesi149/Implementasi-LASTI/backend/internal/transaction"
 )
 
 func main() {
@@ -37,6 +38,7 @@ func main() {
 	otpProvider := otp.NewProvider(cfg.OTPLifetime)
 	tokenManager := token.NewManager(cfg.JWTSecret, cfg.AccessTokenTTL, cfg.RefreshTokenTTL)
 
+	// account
 	repo := account.NewRepository(db)
 	service := account.NewService(account.ServiceDeps{
 		Repo:           repo,
@@ -48,7 +50,13 @@ func main() {
 	})
 
 	handler := account.NewHTTPHandler(service)
-	router := httpapi.NewRouter(handler)
+
+	// transactions
+	transRepo := transaction.NewRepository(db)
+	transService := transaction.NewService(transaction.ServiceDeps{Repo: transRepo})
+	transHandler := transaction.NewHTTPHandler(transService)
+
+	router := httpapi.NewRouter(handler, transHandler)
 
 	srv := server.New(cfg.HTTPPort, router)
 

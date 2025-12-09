@@ -31,3 +31,40 @@ export type AuthTokens = {
   refreshToken: string;
   expiresIn: number;
 };
+
+export type Wallet = {
+  id: string;
+  user_id: string;
+  type: string;
+  name: string;
+  balance: string;
+};
+
+export type Category = {
+  id: string;
+  user_id: string;
+  name: string;
+  kind: string;
+};
+
+export type Transaction = {
+  id: string;
+  user_id: string;
+  wallet_id: string;
+  category_id?: string | null;
+  amount: string;
+  kind: string;
+  note?: string | null;
+  occurred_at: string;
+  created_at: string;
+};
+
+export type CreateTransactionPayload = {
+  userId: string;
+  wallet_id: string;
+  category_id?: string | null;
+  amount: string;
+  kind: 'in' | 'out';
+  note?: string | null;
+  occurred_at?: string | null;
+};

@@ -20,13 +20,13 @@ type Payload struct {
 
 // Provider generates OTP codes with a shared TTL.
 type Provider struct {
-	tl time.Duration
+	ttl time.Duration
 }
 
 // NewProvider builds a Provider with the supplied TTL.
 func NewProvider(ttl time.Duration) *Provider {
 	if ttl <= 0 {
-		tl = 5 * time.Minute
+		ttl = 5 * time.Minute
 	}
 	return &Provider{ttl: ttl}
 }
