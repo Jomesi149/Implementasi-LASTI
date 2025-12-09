@@ -1,0 +1,31 @@
+services:
+  db:
+    image: postgres:15
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: lasti
+      POSTGRES_USER: lasti
+      POSTGRES_PASSWORD: lasti
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./db/migrations:/docker-entrypoint-initdb.d:ro
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    env_file:
+      - ./backend/.env.example
+    environment:
+      DATABASE_URL: postgres://lasti:lasti@db:5432/lasti?sslmode=disable
+      JWT_SECRET: please-change-me
+      APP_ENV: development
+    depends_on:
+      - db
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./backend:/app
+volumes:
+  postgres-data:
