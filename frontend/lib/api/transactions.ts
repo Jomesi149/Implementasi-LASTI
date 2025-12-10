@@ -2,20 +2,30 @@ import { API_BASE_URL } from '../constants';
 import type { Wallet, Category, Transaction, CreateTransactionPayload } from '../types';
 
 async function request<T>(path: string, options: RequestInit) {
-  const res = await fetch(`${API_BASE_URL}${path}`, {
+  const url = `${API_BASE_URL}${path}`;
+  console.log(`🔄 API Request: ${options.method || 'GET'} ${url}`, options.headers);
+  
+  const res = await fetch(url, {
     headers: { 'Content-Type': 'application/json' },
     ...options,
   });
+  
   if (!res.ok) {
     const json = await res.json().catch(() => ({}));
+    console.error(`❌ API Error: ${res.status}`, json?.message || 'api error');
     throw new Error(json?.message || 'api error');
   }
-  return (await res.json()) as T;
+  const data = await res.json() as T;
+  console.log(`✅ API Response:`, data);
+  return data;
 }
 
 export const transactionsApi = {
-  listTransactions(limit = 50) {
-    return request<Transaction[]>(`/transactions?limit=${limit}`, { method: 'GET' });
+  listTransactions(limit = 50, userId: string) {
+    return request<Transaction[]>(`/transactions?limit=${limit}`, { 
+      method: 'GET',
+      headers: { 'X-User-ID': userId }
+    });
   },
   createTransaction(payload: CreateTransactionPayload) {
     return request<Transaction>(`/transactions`, {
@@ -25,9 +35,15 @@ export const transactionsApi = {
     });
   },
   listWallets(userId: string) {
-    return fetch(`${API_BASE_URL}/wallets`, { headers: { 'X-User-ID': userId } }).then(r => r.json() as Promise<Wallet[]>);
+    return request<Wallet[]>(`/wallets`, { 
+      method: 'GET',
+      headers: { 'X-User-ID': userId } 
+    });
   },
   listCategories(userId: string) {
-    return fetch(`${API_BASE_URL}/categories`, { headers: { 'X-User-ID': userId } }).then(r => r.json() as Promise<Category[]>);
+    return request<Category[]>(`/categories`, { 
+      method: 'GET',
+      headers: { 'X-User-ID': userId } 
+    });
   }
 };

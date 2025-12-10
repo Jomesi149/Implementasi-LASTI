@@ -1,12 +1,11 @@
 -- Phase 1 foundation schema for identity and authn/authz
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-CREATE EXTENSION IF NOT EXISTS citext;
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
 CREATE SCHEMA IF NOT EXISTS identity;
 SET search_path TO identity;
 
 CREATE TABLE IF NOT EXISTS roles (
-    id          UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     code        TEXT NOT NULL UNIQUE CHECK (code ~ '^[a-z0-9_\-]+$'),
     name        TEXT NOT NULL,
     description TEXT,
@@ -14,8 +13,8 @@ CREATE TABLE IF NOT EXISTS roles (
 );
 
 CREATE TABLE IF NOT EXISTS users (
-    id             UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    email          CITEXT NOT NULL UNIQUE,
+    id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    email          TEXT NOT NULL UNIQUE,
     phone_number   TEXT,
     password_hash  TEXT NOT NULL,
     is_email_verified BOOLEAN NOT NULL DEFAULT FALSE,
@@ -34,7 +33,7 @@ CREATE TABLE IF NOT EXISTS user_roles (
 );
 
 CREATE TABLE IF NOT EXISTS auth_tokens (
-    id           UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id      UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     token_type   TEXT NOT NULL CHECK (token_type IN ('access','refresh','otp')),
     token_hash   TEXT NOT NULL UNIQUE,
@@ -45,7 +44,7 @@ CREATE TABLE IF NOT EXISTS auth_tokens (
 );
 
 CREATE TABLE IF NOT EXISTS otp_codes (
-    id          UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id     UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     code_hash   TEXT NOT NULL,
     channel     TEXT NOT NULL CHECK (channel IN ('email','sms','auth_app')),

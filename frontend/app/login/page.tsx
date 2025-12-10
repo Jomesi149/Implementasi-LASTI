@@ -10,6 +10,7 @@ import { PrimaryButton } from '../../components/PrimaryButton';
 import { accountApi } from '../../lib/api/account';
 import type { LoginPayload } from '../../lib/types';
 import { loginSchema } from '../../lib/validators';
+import { getUserIdFromToken } from '../../lib/auth';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -31,11 +32,32 @@ export default function LoginPage() {
     try {
       const response = await accountApi.login(parsed.data);
       setFeedback(response.message);
-      const params = new URLSearchParams({ email: parsed.data.email });
-      if (response.otpDebug) {
-        params.set('hint', response.otpDebug);
+      
+      // Jika dapat tokens langsung (no OTP), simpan dan redirect
+      if (response.accessToken) {
+        localStorage.setItem('accessToken', response.accessToken);
+        localStorage.setItem('refreshToken', response.refreshToken || '');
+        
+        // Extract dan simpan userId dari token
+        const userId = getUserIdFromToken();
+        if (userId) {
+          localStorage.setItem('userId', userId);
+          console.log('✓ Login berhasil! User ID:', userId);
+        }
+        
+        console.log('✓ Redirecting to dashboard...');
+        router.push('/dashboard');
+      } else {
+        // Fallback ke OTP flow jika masih ada
+        if (response.otpDebug) {
+          console.log('🔐 DEV OTP CODE:', response.otpDebug);
+        }
+        const params = new URLSearchParams({ email: parsed.data.email });
+        if (response.otpDebug) {
+          params.set('hint', response.otpDebug);
+        }
+        router.push(`/verify-otp?${params.toString()}`);
       }
-      router.push(`/verify-otp?${params.toString()}`);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unable to login';
       setFeedback(message);

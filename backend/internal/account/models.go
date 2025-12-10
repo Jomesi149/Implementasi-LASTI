@@ -8,15 +8,15 @@ import (
 
 // User represents persisted identity row.
 type User struct {
-	ID               uuid.UUID
-	Email            string
-	PhoneNumber      *string
-	PasswordHash     string
-	IsEmailVerified  bool
-	IsPhoneVerified  bool
-	OTPEndpoint      string
-	CreatedAt        time.Time
-	UpdatedAt        time.Time
+	ID              uuid.UUID
+	Email           string
+	PhoneNumber     *string
+	PasswordHash    string
+	IsEmailVerified bool
+	IsPhoneVerified bool
+	OTPEndpoint     string
+	CreatedAt       time.Time
+	UpdatedAt       time.Time
 }
 
 // RegisterRequest carries the payload to create a new account.
@@ -42,8 +42,11 @@ type LoginRequest struct {
 
 // LoginResponse conveys the OTP dispatch result.
 type LoginResponse struct {
-	Message  string `json:"message"`
-	OTPDebug string `json:"otpDebug,omitempty"`
+	Message      string `json:"message"`
+	OTPDebug     string `json:"otpDebug,omitempty"`
+	AccessToken  string `json:"accessToken,omitempty"`
+	RefreshToken string `json:"refreshToken,omitempty"`
+	ExpiresIn    int64  `json:"expiresIn,omitempty"`
 }
 
 // VerifyOTPRequest is sent after the user receives an OTP code.
@@ -54,9 +57,9 @@ type VerifyOTPRequest struct {
 
 // AuthResponse contains the issued tokens for the caller session.
 type AuthResponse struct {
-	AccessToken  string        `json:"accessToken"`
-	RefreshToken string        `json:"refreshToken"`
-	ExpiresIn    int64         `json:"expiresIn"`
+	AccessToken  string `json:"accessToken"`
+	RefreshToken string `json:"refreshToken"`
+	ExpiresIn    int64  `json:"expiresIn"`
 }
 
 // OTPRecord persists generated OTPs.
@@ -70,10 +73,10 @@ type OTPRecord struct {
 
 // AuthTokenRecord persists refresh token metadata.
 type AuthTokenRecord struct {
-	ID         uuid.UUID
-	UserID     uuid.UUID
-	TokenHash  string
-	TokenType  string
-	ExpiresAt  time.Time
-	Metadata   string
+	ID        uuid.UUID
+	UserID    uuid.UUID
+	TokenHash string
+	TokenType string
+	ExpiresAt time.Time
+	Metadata  string
 }

@@ -9,9 +9,9 @@ import (
 	"github.com/go-chi/cors"
 
 	"github.com/Jomesi149/Implementasi-LASTI/backend/internal/account"
+	"github.com/Jomesi149/Implementasi-LASTI/backend/internal/analytics"
+	"github.com/Jomesi149/Implementasi-LASTI/backend/internal/budget"
 	"github.com/Jomesi149/Implementasi-LASTI/backend/internal/transaction"
-	"github.com/Jomesi149/Implementasi-LASTI/backend/internal/budget"   
-    "github.com/Jomesi149/Implementasi-LASTI/backend/internal/analytics" 
 )
 
 // NewRouter wires middlewares and HTTP handlers.
@@ -19,9 +19,9 @@ func NewRouter(accountHandler *account.HTTPHandler, transactionHandler *transact
 	r := chi.NewRouter()
 
 	r.Use(cors.Handler(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:3000", "http://localhost:4000"},
+		AllowedOrigins:   []string{"http://localhost:3000", "http://localhost:3001", "http://localhost:4000"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token", "X-User-ID"},
 		ExposedHeaders:   []string{"Link"},
 		AllowCredentials: true,
 		MaxAge:           300,

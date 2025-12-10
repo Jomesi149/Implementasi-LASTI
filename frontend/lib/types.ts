@@ -19,6 +19,9 @@ export type LoginPayload = {
 export type LoginResponse = {
   message: string;
   otpDebug?: string;
+  accessToken?: string;
+  refreshToken?: string;
+  expiresIn?: number;
 };
 
 export type VerifyPayload = {

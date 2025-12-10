@@ -14,6 +14,7 @@ import (
 	"github.com/Jomesi149/Implementasi-LASTI/backend/internal/otp"
 	"github.com/Jomesi149/Implementasi-LASTI/backend/internal/security"
 	"github.com/Jomesi149/Implementasi-LASTI/backend/internal/token"
+	"github.com/Jomesi149/Implementasi-LASTI/backend/internal/transaction"
 )
 
 var (
@@ -26,6 +27,7 @@ var (
 // Service orchestrates the account flows.
 type Service struct {
 	repo            Repository
+	transactionRepo transaction.Repository
 	validator       *validator.Validate
 	passwordHasher  security.PasswordHasher
 	otpProvider     *otp.Provider
@@ -35,23 +37,25 @@ type Service struct {
 
 // ServiceDeps contains Service constructor dependencies.
 type ServiceDeps struct {
-	Repo           Repository
-	Validator      *validator.Validate
-	PasswordHasher security.PasswordHasher
-	OTPProvider    *otp.Provider
-	TokenManager   *token.Manager
-	AppEnv         string
+	Repo            Repository
+	TransactionRepo transaction.Repository
+	Validator       *validator.Validate
+	PasswordHasher  security.PasswordHasher
+	OTPProvider     *otp.Provider
+	TokenManager    *token.Manager
+	AppEnv          string
 }
 
 // NewService wires the account service.
 func NewService(deps ServiceDeps) *Service {
 	return &Service{
-		repo:           deps.Repo,
-		validator:      deps.Validator,
-		passwordHasher: deps.PasswordHasher,
-		otpProvider:    deps.OTPProvider,
-		tokenManager:   deps.TokenManager,
-		appEnv:         deps.AppEnv,
+		repo:            deps.Repo,
+		transactionRepo: deps.TransactionRepo,
+		validator:       deps.Validator,
+		passwordHasher:  deps.PasswordHasher,
+		otpProvider:     deps.OTPProvider,
+		tokenManager:    deps.TokenManager,
+		appEnv:          deps.AppEnv,
 	}
 }
 
@@ -89,6 +93,21 @@ func (s *Service) Register(ctx context.Context, req RegisterRequest) (*RegisterR
 
 	if err := s.repo.CreateUser(ctx, user); err != nil {
 		return nil, err
+	}
+
+	// Create default wallet for new user (1 user = 1 wallet)
+	wallet := transaction.Wallet{
+		ID:      uuid.New(),
+		UserID:  userID,
+		Type:    "cash",
+		Name:    "Dompet Utama",
+		Balance: "0",
+	}
+	fmt.Printf("\n[WALLET_CREATE] Attempting to create wallet for user %s\n", userID.String())
+	if err := s.transactionRepo.CreateWallet(ctx, wallet); err != nil {
+		fmt.Printf("[WALLET_ERROR] Failed to create wallet for user %s: %v\n", userID.String(), err)
+	} else {
+		fmt.Printf("[WALLET_SUCCESS] Created wallet %s for user %s\n", wallet.ID.String(), userID.String())
 	}
 
 	otpPayload, err := s.otpProvider.Generate(userID)
@@ -135,26 +154,30 @@ func (s *Service) Login(ctx context.Context, req LoginRequest) (*LoginResponse, 
 		return nil, ErrInvalidCredentials
 	}
 
-	otpPayload, err := s.otpProvider.Generate(user.ID)
+	// Langsung issue tokens tanpa OTP
+	tokens, err := s.tokenManager.IssueTokens(user.ID.String(), []string{"user"})
 	if err != nil {
-		return nil, fmt.Errorf("generate otp: %w", err)
+		return nil, fmt.Errorf("issue tokens: %w", err)
 	}
 
-	record := OTPRecord{
+	authRecord := AuthTokenRecord{
 		ID:        uuid.New(),
 		UserID:    user.ID,
-		CodeHash:  otpPayload.Hash,
-		Channel:   "auth_app",
-		ExpiresAt: otpPayload.ExpiresAt,
+		TokenType: "refresh",
+		TokenHash: token.HashRefreshToken(tokens.RefreshToken),
+		ExpiresAt: tokens.RefreshExpiresAt,
+		Metadata:  `{"reason":"direct_login"}`,
 	}
 
-	if err := s.repo.StoreOTP(ctx, record); err != nil {
+	if err := s.repo.SaveRefreshToken(ctx, authRecord); err != nil {
 		return nil, err
 	}
 
-	resp := &LoginResponse{Message: "OTP dispatched"}
-	if s.appEnv != "production" {
-		resp.OTPDebug = otpPayload.Code
+	resp := &LoginResponse{
+		Message:      "Login successful",
+		AccessToken:  tokens.AccessToken,
+		RefreshToken: tokens.RefreshToken,
+		ExpiresIn:    int64(tokens.AccessExpiresAt.Sub(time.Now()).Seconds()),
 	}
 	return resp, nil
 }

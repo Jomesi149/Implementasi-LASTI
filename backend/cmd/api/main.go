@@ -11,6 +11,8 @@ import (
 	"github.com/go-playground/validator/v10"
 
 	"github.com/Jomesi149/Implementasi-LASTI/backend/internal/account"
+	"github.com/Jomesi149/Implementasi-LASTI/backend/internal/analytics"
+	"github.com/Jomesi149/Implementasi-LASTI/backend/internal/budget"
 	"github.com/Jomesi149/Implementasi-LASTI/backend/internal/config"
 	"github.com/Jomesi149/Implementasi-LASTI/backend/internal/database"
 	httpapi "github.com/Jomesi149/Implementasi-LASTI/backend/internal/http"
@@ -19,8 +21,6 @@ import (
 	"github.com/Jomesi149/Implementasi-LASTI/backend/internal/server"
 	"github.com/Jomesi149/Implementasi-LASTI/backend/internal/token"
 	"github.com/Jomesi149/Implementasi-LASTI/backend/internal/transaction"
-	"github.com/Jomesi149/Implementasi-LASTI/backend/internal/budget"
-	"github.com/Jomesi149/Implementasi-LASTI/backend/internal/analytics"
 )
 
 func main() {
@@ -42,31 +42,36 @@ func main() {
 
 	// account
 	repo := account.NewRepository(db)
+
+	// transactions
+	transRepo := transaction.NewRepository(db)
+
+	// account service with transaction repo
 	service := account.NewService(account.ServiceDeps{
-		Repo:           repo,
-		Validator:      validate,
-		PasswordHasher: passwordHasher,
-		OTPProvider:    otpProvider,
-		TokenManager:   tokenManager,
-		AppEnv:         cfg.AppEnv,
+		Repo:            repo,
+		TransactionRepo: transRepo,
+		Validator:       validate,
+		PasswordHasher:  passwordHasher,
+		OTPProvider:     otpProvider,
+		TokenManager:    tokenManager,
+		AppEnv:          cfg.AppEnv,
 	})
 
 	handler := account.NewHTTPHandler(service)
 
-	// transactions
-	transRepo := transaction.NewRepository(db)
+	// transaction service
 	transService := transaction.NewService(transaction.ServiceDeps{Repo: transRepo})
 	transHandler := transaction.NewHTTPHandler(transService)
 
 	// budgets
 	budgetRepo := budget.NewRepository(db)
-    budgetService := budget.NewService(budgetRepo)
-    budgetHandler := budget.NewHTTPHandler(budgetService)
+	budgetService := budget.NewService(budgetRepo)
+	budgetHandler := budget.NewHTTPHandler(budgetService)
 
 	// analytics
 	analyticsRepo := analytics.NewRepository(db)
-    analyticsService := analytics.NewService(analyticsRepo)
-    analyticsHandler := analytics.NewHTTPHandler(analyticsService)
+	analyticsService := analytics.NewService(analyticsRepo)
+	analyticsHandler := analytics.NewHTTPHandler(analyticsService)
 
 	router := httpapi.NewRouter(handler, transHandler, budgetHandler, analyticsHandler)
 

@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"strconv"
 
 	"github.com/google/uuid"
 )
@@ -29,8 +30,13 @@ func NewRepository(db *sql.DB) *SQLRepository {
 }
 
 func (r *SQLRepository) CreateWallet(ctx context.Context, w Wallet) error {
+	// Convert balance string to float64 for database
+	balance, err := strconv.ParseFloat(w.Balance, 64)
+	if err != nil {
+		return fmt.Errorf("invalid balance: %w", err)
+	}
 	query := `INSERT INTO finance.wallets (id, user_id, type, name, balance, created_at, updated_at) VALUES ($1,$2,$3,$4,$5,NOW(),NOW())`
-	if _, err := r.db.ExecContext(ctx, query, w.ID, w.UserID, w.Type, w.Name, w.Balance); err != nil {
+	if _, err := r.db.ExecContext(ctx, query, w.ID, w.UserID, w.Type, w.Name, balance); err != nil {
 		return fmt.Errorf("insert wallet: %w", err)
 	}
 	return nil
@@ -84,6 +90,12 @@ func (r *SQLRepository) ListCategories(ctx context.Context, userID uuid.UUID) ([
 
 // CreateTransaction inserts a transaction and updates wallet balance atomically.
 func (r *SQLRepository) CreateTransaction(ctx context.Context, t Transaction) error {
+	// Convert amount string to float64 for database
+	amount, err := strconv.ParseFloat(t.Amount, 64)
+	if err != nil {
+		return fmt.Errorf("invalid amount: %w", err)
+	}
+
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
 		return fmt.Errorf("begin tx: %w", err)
@@ -96,7 +108,7 @@ func (r *SQLRepository) CreateTransaction(ctx context.Context, t Transaction) er
 	}()
 
 	q := `INSERT INTO finance.transactions (id, user_id, wallet_id, category_id, amount, kind, note, occurred_at, created_at) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,NOW())`
-	if _, err = tx.ExecContext(ctx, q, t.ID, t.UserID, t.WalletID, t.CategoryID, t.Amount, t.Kind, t.Note, t.OccurredAt); err != nil {
+	if _, err = tx.ExecContext(ctx, q, t.ID, t.UserID, t.WalletID, t.CategoryID, amount, t.Kind, t.Note, t.OccurredAt); err != nil {
 		return fmt.Errorf("insert transaction: %w", err)
 	}
 
@@ -108,7 +120,7 @@ func (r *SQLRepository) CreateTransaction(ctx context.Context, t Transaction) er
 		balanceOp = "balance - $1"
 	}
 	uq := fmt.Sprintf("UPDATE finance.wallets SET balance = %s, updated_at = NOW() WHERE id = $2", balanceOp)
-	if _, err = tx.ExecContext(ctx, uq, t.Amount, t.WalletID); err != nil {
+	if _, err = tx.ExecContext(ctx, uq, amount, t.WalletID); err != nil {
 		return fmt.Errorf("update wallet: %w", err)
 	}
 

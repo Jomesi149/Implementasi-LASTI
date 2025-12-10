@@ -2,6 +2,7 @@ package transaction
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 	"time"
@@ -72,11 +73,14 @@ func (h *HTTPHandler) handleListWallets(w http.ResponseWriter, r *http.Request) 
 		response.Error(w, http.StatusUnauthorized, "missing X-User-ID header")
 		return
 	}
+	fmt.Printf("\n[LIST_WALLETS] Request from user: %s\n", uid.String())
 	wallets, err := h.service.ListWallets(r.Context(), uid)
 	if err != nil {
+		fmt.Printf("[LIST_WALLETS_ERROR] Failed for user %s: %v\n", uid.String(), err)
 		response.Error(w, http.StatusInternalServerError, err.Error())
 		return
 	}
+	fmt.Printf("[LIST_WALLETS_SUCCESS] Found %d wallet(s) for user %s\n", len(wallets), uid.String())
 	response.JSON(w, http.StatusOK, wallets)
 }
 
