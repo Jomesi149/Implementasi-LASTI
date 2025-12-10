@@ -10,10 +10,12 @@ import (
 
 	"github.com/Jomesi149/Implementasi-LASTI/backend/internal/account"
 	"github.com/Jomesi149/Implementasi-LASTI/backend/internal/transaction"
+	"github.com/Jomesi149/Implementasi-LASTI/backend/internal/budget"   
+    "github.com/Jomesi149/Implementasi-LASTI/backend/internal/analytics" 
 )
 
 // NewRouter wires middlewares and HTTP handlers.
-func NewRouter(accountHandler *account.HTTPHandler, transactionHandler *transaction.HTTPHandler) http.Handler {
+func NewRouter(accountHandler *account.HTTPHandler, transactionHandler *transaction.HTTPHandler, budgetHandler *budget.HTTPHandler, analyticsHandler *analytics.HTTPHandler) http.Handler {
 	r := chi.NewRouter()
 
 	r.Use(cors.Handler(cors.Options{
@@ -39,6 +41,8 @@ func NewRouter(accountHandler *account.HTTPHandler, transactionHandler *transact
 	r.Route("/api/v1", func(r chi.Router) {
 		accountHandler.RegisterRoutes(r)
 		transactionHandler.RegisterRoutes(r)
+		budgetHandler.RegisterRoutes(r)
+		analyticsHandler.RegisterRoutes(r)
 	})
 
 	return r

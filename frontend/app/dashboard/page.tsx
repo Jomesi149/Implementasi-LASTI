@@ -35,6 +35,7 @@ export default function DashboardPage() {
   }, []);
 
   const total = wallets.reduce((acc, w) => acc + parseFloat(w.balance || '0'), 0);
+ 
 
   return (
     <div style={{ padding: 24 }}>

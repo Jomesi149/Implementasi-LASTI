@@ -19,6 +19,8 @@ import (
 	"github.com/Jomesi149/Implementasi-LASTI/backend/internal/server"
 	"github.com/Jomesi149/Implementasi-LASTI/backend/internal/token"
 	"github.com/Jomesi149/Implementasi-LASTI/backend/internal/transaction"
+	"github.com/Jomesi149/Implementasi-LASTI/backend/internal/budget"
+	"github.com/Jomesi149/Implementasi-LASTI/backend/internal/analytics"
 )
 
 func main() {
@@ -56,7 +58,17 @@ func main() {
 	transService := transaction.NewService(transaction.ServiceDeps{Repo: transRepo})
 	transHandler := transaction.NewHTTPHandler(transService)
 
-	router := httpapi.NewRouter(handler, transHandler)
+	// budgets
+	budgetRepo := budget.NewRepository(db)
+    budgetService := budget.NewService(budgetRepo)
+    budgetHandler := budget.NewHTTPHandler(budgetService)
+
+	// analytics
+	analyticsRepo := analytics.NewRepository(db)
+    analyticsService := analytics.NewService(analyticsRepo)
+    analyticsHandler := analytics.NewHTTPHandler(analyticsService)
+
+	router := httpapi.NewRouter(handler, transHandler, budgetHandler, analyticsHandler)
 
 	srv := server.New(cfg.HTTPPort, router)
 
