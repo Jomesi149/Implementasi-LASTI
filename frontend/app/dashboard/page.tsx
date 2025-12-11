@@ -76,17 +76,36 @@ export default function DashboardPage() {
   }, [userId]);
 
   const total = wallets.reduce((acc, w) => acc + parseFloat(w.balance || '0'), 0);
+  
+  // Calculate total income and expense
+  const totalIncome = transactions
+    .filter(t => t.kind === 'in')
+    .reduce((acc, t) => acc + parseFloat(t.amount || '0'), 0);
+  
+  const totalExpense = transactions
+    .filter(t => t.kind === 'out')
+    .reduce((acc, t) => acc + parseFloat(t.amount || '0'), 0);
 
   return (
     <div style={{ padding: 24, minHeight: '100vh', background: '#ffffff' }}>
       <h1 style={{ color: '#1a1a1a', marginBottom: 24 }}>Dashboard</h1>
 
-      <div style={{ display: 'flex', gap: 12, marginBottom: 24 }}>
-        <div style={{ padding: 20, border: '2px solid #e5e7eb', borderRadius: 12, background: '#f9fafb', flex: 1 }}>
-          <div style={{ fontSize: 14, color: '#6b7280', marginBottom: 8 }}>Current Balance</div>
-          <div style={{ fontSize: 32, fontWeight: 700, color: '#1a1a1a' }}>{formatCurrency(String(total))}</div>
+      <div style={{ display: 'flex', gap: 12, marginBottom: 24, alignItems: 'center' }}>
+        <div style={{ padding: 20, border: '2px solid #e5e7eb', borderRadius: 12, background: '#f9fafb', flex: 1, display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 20 }}>
+          <div>
+            <div style={{ fontSize: 14, color: '#6b7280', marginBottom: 8 }}>Current Balance</div>
+            <div style={{ fontSize: 32, fontWeight: 700, color: '#1a1a1a' }}>{formatCurrency(String(total))}</div>
+          </div>
+          <div>
+            <div style={{ fontSize: 14, color: '#6b7280', marginBottom: 8 }}>Total Income</div>
+            <div style={{ fontSize: 32, fontWeight: 700, color: '#10b981' }}>+{formatCurrency(String(totalIncome))}</div>
+          </div>
+          <div>
+            <div style={{ fontSize: 14, color: '#6b7280', marginBottom: 8 }}>Total Expense</div>
+            <div style={{ fontSize: 32, fontWeight: 700, color: '#ef4444' }}>-{formatCurrency(String(totalExpense))}</div>
+          </div>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center' }}>
+        <div>
           <button 
             onClick={() => setShow(true)}
             style={{ 
