@@ -49,12 +49,27 @@ func main() {
 	ctx := context.Background()
 	_, err = db.ExecContext(ctx, migration)
 	if err != nil {
-		// Check if error is about column already existing
-		if err.Error() != "pq: column \"username\" of relation \"users\" already exists" {
+		// Check if error is about objects already existing
+		errMsg := err.Error()
+		if contains(errMsg, "already exists") {
+			fmt.Println("✓ Migration already applied, skipping")
+		} else {
 			log.Fatalf("Migration failed: %v", err)
 		}
-		fmt.Println("✓ Column already exists, skipping migration")
 	} else {
 		fmt.Println("✓ Migration completed successfully")
 	}
+}
+
+func contains(s, substr string) bool {
+	return len(s) >= len(substr) && (s == substr || len(s) > len(substr) && (s[:len(substr)] == substr || s[len(s)-len(substr):] == substr || containsMiddle(s, substr)))
+}
+
+func containsMiddle(s, substr string) bool {
+	for i := 0; i <= len(s)-len(substr); i++ {
+		if s[i:i+len(substr)] == substr {
+			return true
+		}
+	}
+	return false
 }
