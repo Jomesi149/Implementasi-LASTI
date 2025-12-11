@@ -1,5 +1,6 @@
 export type RegisterPayload = {
   email: string;
+  username: string;
   password: string;
   channel: 'email' | 'sms' | 'auth_app';
   phoneNumber?: string;

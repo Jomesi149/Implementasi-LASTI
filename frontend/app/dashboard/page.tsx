@@ -4,7 +4,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { transactionsApi } from '../../lib/api/transactions';
 import type { Wallet, Transaction, CreateTransactionPayload } from '../../lib/types';
-import { getUserIdFromToken } from '../../lib/auth';
+import { getUserIdFromToken, getUsernameFromToken } from '../../lib/auth';
 
 function formatCurrency(v: string) {
   const n = parseFloat(v || '0');
@@ -23,17 +23,21 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [show, setShow] = useState(false);
   const [userId, setUserId] = useState<string>('');
+  const [username, setUsername] = useState<string>('');
 
   // Initialize userId from JWT token on mount
   useEffect(() => {
     const id = getUserIdFromToken();
+    const uname = getUsernameFromToken();
     console.log('🔑 Initializing userId from token:', id);
+    console.log('👤 Initializing username from token:', uname);
     if (!id) {
       console.warn('❌ No user ID found in token, redirecting to login');
       router.push('/login');
       return;
     }
     setUserId(id);
+    setUsername(uname || '');
   }, [router]);
 
   useEffect(() => {
@@ -88,7 +92,7 @@ export default function DashboardPage() {
 
   return (
     <div style={{ padding: 24, minHeight: '100vh', background: '#ffffff' }}>
-      <h1 style={{ color: '#1a1a1a', marginBottom: 24 }}>Dashboard</h1>
+      <h1 style={{ color: '#1a1a1a', marginBottom: 24 }}>Welcome, {username || 'User'}</h1>
 
       <div style={{ display: 'flex', gap: 12, marginBottom: 24, alignItems: 'center' }}>
         <div style={{ padding: 20, border: '2px solid #e5e7eb', borderRadius: 12, background: '#f9fafb', flex: 1, display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 20 }}>

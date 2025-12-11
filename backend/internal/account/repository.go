@@ -33,12 +33,13 @@ func NewRepository(db *sql.DB) *SQLRepository {
 
 // CreateUser inserts a new record into identity.users.
 func (r *SQLRepository) CreateUser(ctx context.Context, user *User) error {
-	query := `INSERT INTO identity.users (id, email, phone_number, password_hash, is_email_verified, is_phone_verified, otp_enabled, created_at, updated_at)
-		VALUES ($1, $2, NULLIF($3, ''), $4, $5, $6, $7, NOW(), NOW())`
+	query := `INSERT INTO identity.users (id, email, username, phone_number, password_hash, is_email_verified, is_phone_verified, otp_enabled, created_at, updated_at)
+		VALUES ($1, $2, $3, NULLIF($4, ''), $5, $6, $7, $8, NOW(), NOW())`
 
 	_, err := r.db.ExecContext(ctx, query,
 		user.ID,
 		user.Email,
+		user.Username,
 		valueOrEmpty(user.PhoneNumber),
 		user.PasswordHash,
 		user.IsEmailVerified,
@@ -53,14 +54,14 @@ func (r *SQLRepository) CreateUser(ctx context.Context, user *User) error {
 
 // GetUserByEmail fetches a user joined with meta columns.
 func (r *SQLRepository) GetUserByEmail(ctx context.Context, email string) (*User, error) {
-	query := `SELECT id, email, phone_number, password_hash, is_email_verified, is_phone_verified, created_at, updated_at
+	query := `SELECT id, email, username, phone_number, password_hash, is_email_verified, is_phone_verified, created_at, updated_at
 		FROM identity.users WHERE email = $1`
 
 	row := r.db.QueryRowContext(ctx, query, email)
 	var usr User
 	var phone sql.NullString
 
-	if err := row.Scan(&usr.ID, &usr.Email, &phone, &usr.PasswordHash, &usr.IsEmailVerified, &usr.IsPhoneVerified, &usr.CreatedAt, &usr.UpdatedAt); err != nil {
+	if err := row.Scan(&usr.ID, &usr.Email, &usr.Username, &phone, &usr.PasswordHash, &usr.IsEmailVerified, &usr.IsPhoneVerified, &usr.CreatedAt, &usr.UpdatedAt); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, err
 		}

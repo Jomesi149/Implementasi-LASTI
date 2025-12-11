@@ -34,7 +34,7 @@ func NewManager(secret string, accessTTL, refreshTTL time.Duration) *Manager {
 }
 
 // IssueTokens mints signed JWT access and refresh tokens for a subject.
-func (m *Manager) IssueTokens(subject string, roles []string) (*Tokens, error) {
+func (m *Manager) IssueTokens(subject string, roles []string, username string, email string) (*Tokens, error) {
 	if len(roles) == 0 {
 		roles = []string{"user"}
 	}
@@ -44,16 +44,18 @@ func (m *Manager) IssueTokens(subject string, roles []string) (*Tokens, error) {
 	refreshExp := now.Add(m.refreshTokenTTL)
 
 	accessClaims := jwt.MapClaims{
-		"sub": subject,
-		"roles": roles,
-		"exp": accessExp.Unix(),
-		"iat": now.Unix(),
+		"sub":      subject,
+		"username": username,
+		"email":    email,
+		"roles":    roles,
+		"exp":      accessExp.Unix(),
+		"iat":      now.Unix(),
 	}
 	refreshClaims := jwt.MapClaims{
-		"sub": subject,
+		"sub":  subject,
 		"type": "refresh",
-		"exp": refreshExp.Unix(),
-		"iat": now.Unix(),
+		"exp":  refreshExp.Unix(),
+		"iat":  now.Unix(),
 	}
 
 	accessToken, err := jwt.NewWithClaims(jwt.SigningMethodHS256, accessClaims).SignedString(m.secret)

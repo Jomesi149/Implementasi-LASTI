@@ -6,6 +6,7 @@ interface JWTPayload {
   sub?: string;
   user_id?: string;
   email?: string;
+  username?: string;
   iat?: number;
   exp?: number;
   [key: string]: any;
@@ -98,4 +99,28 @@ export function isTokenExpired(token: string): boolean {
 export function clearAuthTokens(): void {
   localStorage.removeItem('accessToken');
   localStorage.removeItem('refreshToken');
+}
+
+/**
+ * Get username from stored token
+ */
+export function getUsernameFromToken(): string | null {
+  try {
+    const token = localStorage.getItem('accessToken');
+    if (!token) return null;
+
+    const payload = decodeJWT(token);
+    if (!payload) return null;
+
+    const username = payload.username;
+    if (!username) {
+      console.warn('No username found in JWT payload');
+      return null;
+    }
+
+    return username;
+  } catch (error) {
+    console.error('Failed to get username from token:', error);
+    return null;
+  }
 }

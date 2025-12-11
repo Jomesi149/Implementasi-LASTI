@@ -10,6 +10,7 @@ import (
 type User struct {
 	ID              uuid.UUID
 	Email           string
+	Username        string
 	PhoneNumber     *string
 	PasswordHash    string
 	IsEmailVerified bool
@@ -22,6 +23,7 @@ type User struct {
 // RegisterRequest carries the payload to create a new account.
 type RegisterRequest struct {
 	Email       string `json:"email" validate:"required,email"`
+	Username    string `json:"username" validate:"required,min=3,max=50"`
 	PhoneNumber string `json:"phoneNumber" validate:"omitempty,e164"`
 	Password    string `json:"password" validate:"required,min=8"`
 	Channel     string `json:"channel" validate:"required,oneof=email sms auth_app"`

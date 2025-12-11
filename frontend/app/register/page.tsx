@@ -15,7 +15,7 @@ const CHANNELS: RegisterPayload['channel'][] = ['email', 'sms', 'auth_app'];
 
 export default function RegisterPage() {
   const router = useRouter();
-  const [form, setForm] = useState<RegisterPayload>({ email: '', password: '', channel: 'email', phoneNumber: '' });
+  const [form, setForm] = useState<RegisterPayload>({ email: '', username: '', password: '', channel: 'email', phoneNumber: '' });
   const [errors, setErrors] = useState<Partial<Record<keyof RegisterPayload, string>>>({});
   const [feedback, setFeedback] = useState('');
   const [loading, setLoading] = useState(false);
@@ -61,6 +61,16 @@ export default function RegisterPage() {
           error={errors.email}
           onChange={(event: ChangeEvent<HTMLInputElement>) =>
             setForm((prev: RegisterPayload) => ({ ...prev, email: event.target.value }))
+          }
+        />
+        <InputField
+          label="Username"
+          type="text"
+          placeholder="your_username"
+          value={form.username}
+          error={errors.username}
+          onChange={(event: ChangeEvent<HTMLInputElement>) =>
+            setForm((prev: RegisterPayload) => ({ ...prev, username: event.target.value }))
           }
         />
         <InputField

@@ -85,6 +85,7 @@ func (s *Service) Register(ctx context.Context, req RegisterRequest) (*RegisterR
 	user := &User{
 		ID:              userID,
 		Email:           strings.ToLower(req.Email),
+		Username:        req.Username,
 		PhoneNumber:     phone,
 		PasswordHash:    hash,
 		IsEmailVerified: false,
@@ -155,7 +156,7 @@ func (s *Service) Login(ctx context.Context, req LoginRequest) (*LoginResponse, 
 	}
 
 	// Langsung issue tokens tanpa OTP
-	tokens, err := s.tokenManager.IssueTokens(user.ID.String(), []string{"user"})
+	tokens, err := s.tokenManager.IssueTokens(user.ID.String(), []string{"user"}, user.Username, user.Email)
 	if err != nil {
 		return nil, fmt.Errorf("issue tokens: %w", err)
 	}
@@ -207,7 +208,7 @@ func (s *Service) VerifyOTP(ctx context.Context, req VerifyOTPRequest) (*AuthRes
 		return nil, err
 	}
 
-	tokens, err := s.tokenManager.IssueTokens(user.ID.String(), []string{"user"})
+	tokens, err := s.tokenManager.IssueTokens(user.ID.String(), []string{"user"}, user.Username, user.Email)
 	if err != nil {
 		return nil, err
 	}
