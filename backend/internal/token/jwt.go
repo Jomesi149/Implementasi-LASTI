@@ -18,10 +18,10 @@ type Manager struct {
 
 // Tokens bundles the generated token strings and expiry metadata.
 type Tokens struct {
-	AccessToken       string
-	RefreshToken      string
-	AccessExpiresAt   time.Time
-	RefreshExpiresAt  time.Time
+	AccessToken      string
+	RefreshToken     string
+	AccessExpiresAt  time.Time
+	RefreshExpiresAt time.Time
 }
 
 // NewManager configures a Manager with TTLs.
