@@ -44,8 +44,8 @@ export default function RegisterPage() {
 
   return (
     <AuthShell
-      title="Create secure access"
-      subtitle="Provision identity, set OTP preferences, and join the LASTI workspace."
+      title="Create Your Account"
+      subtitle="Provision identity, set OTP preferences, and join Budgetin."
       footer={
         <p>
           Already have access? <Link href="/login">Return to login</Link>
@@ -54,7 +54,7 @@ export default function RegisterPage() {
     >
       <form onSubmit={handleSubmit} className="form-grid">
         <InputField
-          label="Work email"
+          label="Email"
           type="email"
           placeholder="you@company.id"
           value={form.email}

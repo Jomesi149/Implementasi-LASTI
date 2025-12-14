@@ -69,7 +69,7 @@ export default function LoginPage() {
   return (
     <AuthShell
       title="Welcome back"
-      subtitle="Access the secure LASTI control room."
+      subtitle="Login to your Budgetin account"
       footer={
         <p>
           Need an account? <Link href="/register">Create one</Link>
@@ -78,7 +78,7 @@ export default function LoginPage() {
     >
       <form onSubmit={handleSubmit} className="form-grid">
         <InputField
-          label="Work email"
+          label="Email"
           placeholder="alex@lasti.id"
           type="email"
           value={form.email}
