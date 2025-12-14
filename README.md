@@ -1,6 +1,15 @@
-# LASTI - Personal Finance Management System
+# Budgetin - Personal Finance Management System
 
-A full-stack application for managing personal finances with wallets, transactions, budgets, and analytics.
+Aplikasi full-stack untuk mengelola dompet, transaksi, anggaran, dan analitik keuangan pribadi.
+
+Kelompok 04 - K02
+Muhammad Farhan/ 18223004
+Henrycus Hugatama Risaldy/ 18223008
+Mudzaki Kaarzaqiel Hakim / 18223024
+Darryl Rizqi/ 18223084
+Raditya Zaki Athaya/ 18223086
+Joan Melkior Silaen/ 18223102
+
 
 ## Tech Stack
 
@@ -15,27 +24,16 @@ A full-stack application for managing personal finances with wallets, transactio
 - **Language**: TypeScript
 - **UI**: React with inline CSS
 
-## Project Structure
+## Struktur Proyek
 
 ```
 .
-├── backend/              # Go backend service
+├── backend/
 │   ├── cmd/
-│   │   ├── api/         # Main API server
-│   │   └── migrate/     # Database migration tool
-│   ├── internal/
-│   │   ├── account/     # User authentication & management
-│   │   ├── transaction/ # Wallets, transactions, categories
-│   │   ├── budget/      # Budget management
-│   │   ├── analytics/   # Analytics
-│   │   ├── config/      # Configuration
-│   │   ├── database/    # Database connection
-│   │   ├── http/        # HTTP routes & middleware
-│   │   ├── otp/         # OTP utilities
-│   │   ├── security/    # Password hashing
-│   │   ├── server/      # Server setup
-│   │   └── token/       # JWT token management
-│   ├── pkg/response/    # Shared response utilities
+│   │   ├── api             # Server HTTP utama
+│   │   └── migrate         # Tool untuk migrasi berbasis Go
+│   ├── internal/           # Modul bisnis (account, transaction, budget, dll.)
+│   ├── pkg/response/       # Utilitas respons HTTP
 │   └── go.mod
 ├── frontend/            # Next.js frontend
 │   ├── app/            # Pages & routes
@@ -46,142 +44,75 @@ A full-stack application for managing personal finances with wallets, transactio
 └── docker-compose.yml  # Docker services
 ```
 
-## Prerequisites
+## 1.Setup & Installation
 
-- Go 1.21+
-- Node.js 18+
-- PostgreSQL 17
-- npm or yarn
+1. **Clone repo & instal dependensi Go**
+   ```bash
+   git clone https://github.com/Jomesi149/Implementasi-LASTI.git
+   cd Implementasi-LASTI/backend
+   go mod download
+   ```
 
-## Setup & Installation
+2. **Buat berkas `backend/.env`**
+   ```env
+   APP_ENV=development
+   HTTP_PORT=8080
+   DATABASE_URL=postgres://postgres:postgres@localhost:5432/lasti?sslmode=disable
+   JWT_SECRET=isi-dengan-string-acak-minimal-32-karakter
+   OTP_WINDOW_SECONDS=300
+   ```
 
-### 1. Backend Setup
+3. **Buat database PostgreSQL**
+   ```bash
+   createdb -U postgres -h localhost lasti
+   ```
+   Tambahkan `-W` jika akun Postgres menggunakan password.
+
+## 2. Migrasi Database (Wajib)
+
+Backend mengharuskan skema `identity` dan `finance`. Lakukan dua tahap berikut sebelum menjalankan server.
+
+1. **SQL dasar (schema + tabel)**
+   ```bash
+   cd Implementasi-LASTI
+   psql -U postgres -d lasti -f db/migrations/001_init.sql
+   psql -U postgres -d lasti -f db/migrations/004_add_username.sql
+   psql -U postgres -d lasti -f db/migrations/005_complete_sync.sql
+   ```
+
+2. **Patch tambahan via tool Go**
+   ```bash
+   cd backend
+   go run ./cmd/migrate
+   ```
+   Abaikan peringatan "already exists" karena artinya struktur sudah siap.
+
+## 3. Menjalankan Backend
 
 ```bash
 cd backend
-go mod download
+go run ./cmd/api
 ```
 
-### 2. Database Setup
+Server listen di `http://localhost:8080`. Uji dengan membuka `http://localhost:8080/health` (respon `{"status":"ok"}`).
 
-Start PostgreSQL 17 and create the database:
-
-```bash
-createdb -U postgres -h localhost lasti
-```
-
-Run migrations:
-
-```bash
-cd backend
-go run ./cmd/migrate
-```
-
-### 3. Backend Configuration
-
-Create `.env` file in `backend/` folder:
-
-```env
-SERVER_PORT=8080
-DATABASE_URL=postgres://postgres:postgres@localhost:5432/lasti
-JWT_SECRET=your-secret-key-min-32-chars
-APP_ENV=development
-```
-
-### 4. Start Backend
-
-```bash
-cd backend
-go build -o app.exe ./cmd/api
-./app.exe
-```
-
-Backend will run on `http://localhost:8080`
-
-### 5. Frontend Setup
+### 1. Frontend Setup
 
 ```bash
 cd frontend
 npm install
 ```
 
-### 6. Start Frontend
+### 2. Start Frontend
 
 ```bash
 cd frontend
 npm run dev
 ```
 
-Frontend will run on `http://localhost:3000` (or `3001` if port conflict)
+Aplikasi berjalan di `http://localhost:3000`. Basis URL API default `http://localhost:8080/api/v1` (lihat `frontend/lib/constants.ts`). Jika backend berada di alamat lain, set `NEXT_PUBLIC_API_BASE_URL` pada `frontend/.env.local` lalu restart dev server.
 
-## Features
-
-### Authentication
-- Email/password registration
-- Direct login (JWT tokens)
-- Username support
-
-### Finance Management
-- **Wallets**: 1 wallet auto-created per user
-- **Transactions**: Income and expense tracking
-- **Categories**: Transaction categorization
-- **Dashboard**: Balance overview with income/expense summary
-
-### API Endpoints
-
-#### Account
-- `POST /api/v1/account/register` - Register new user
-- `POST /api/v1/account/login` - Login user
-
-#### Finance
-- `GET /api/v1/wallets` - List user wallets
-- `POST /api/v1/wallets` - Create wallet
-- `GET /api/v1/transactions` - List transactions
-- `POST /api/v1/transactions` - Create transaction
-- `GET /api/v1/categories` - List categories
-- `POST /api/v1/categories` - Create category
-
-## Database Schema
-
-### identity.users
-- id (UUID, PK)
-- email (TEXT, UNIQUE)
-- username (TEXT, UNIQUE)
-- password_hash (TEXT)
-- phone_number (TEXT, NULL)
-- is_email_verified (BOOLEAN)
-- is_phone_verified (BOOLEAN)
-- created_at, updated_at (TIMESTAMP)
-
-### finance.wallets
-- id (UUID, PK)
-- user_id (UUID, FK)
-- type (TEXT)
-- name (TEXT)
-- balance (NUMERIC)
-- created_at, updated_at (TIMESTAMP)
-
-### finance.transactions
-- id (UUID, PK)
-- user_id (UUID, FK)
-- wallet_id (UUID, FK)
-- category_id (UUID, FK, NULL)
-- amount (NUMERIC)
-- kind (TEXT: 'in' or 'out')
-- note (TEXT, NULL)
-- occurred_at (TIMESTAMP)
-- created_at (TIMESTAMP)
-
-### finance.categories
-- id (UUID, PK)
-- user_id (UUID, FK)
-- name (TEXT)
-- kind (TEXT: 'in' or 'out')
-- created_at (TIMESTAMP)
-
-## Deployment
-
-### Using Docker Compose
+## 4. Menjalankan via Docker Compose
 
 ```bash
 docker-compose up -d
@@ -217,7 +148,3 @@ docker-compose up -d
 - Go: Run `go mod tidy` to update dependencies
 - Node: Run `npm install` to install dependencies
 - Clear caches: `go clean -cache` / `npm cache clean --force`
-
-## License
-
-MIT
