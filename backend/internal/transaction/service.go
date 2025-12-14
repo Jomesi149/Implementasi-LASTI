@@ -42,7 +42,41 @@ func (s *Service) CreateCategory(ctx context.Context, userID uuid.UUID, name, ki
 }
 
 func (s *Service) ListCategories(ctx context.Context, userID uuid.UUID) ([]Category, error) {
-	return s.repo.ListCategories(ctx, userID)
+	categories, err := s.repo.ListCategories(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Auto-create default categories if user has none
+	if len(categories) == 0 {
+		defaultCategories := []struct {
+			Name string
+			Kind string
+		}{
+			{Name: "Transportasi", Kind: "out"},
+			{Name: "Makan", Kind: "out"},
+			{Name: "Hiburan", Kind: "out"},
+			{Name: "Lain-lain", Kind: "out"},
+			{Name: "Gaji", Kind: "in"},
+			{Name: "Bonus", Kind: "in"},
+		}
+		for _, cat := range defaultCategories {
+			category := Category{
+				ID:        uuid.New(),
+				UserID:    userID,
+				Name:      cat.Name,
+				Kind:      cat.Kind,
+				CreatedAt: time.Now(),
+			}
+			if err := s.repo.CreateCategory(ctx, category); err != nil {
+				fmt.Printf("[CATEGORY_AUTO_CREATE_ERROR] Failed to create category %s: %v\n", cat.Name, err)
+			} else {
+				categories = append(categories, category)
+			}
+		}
+	}
+
+	return categories, nil
 }
 
 func (s *Service) CreateTransaction(ctx context.Context, userID uuid.UUID, walletID uuid.UUID, categoryID *uuid.UUID, amount string, kind string, note *string, occurredAt time.Time) (*Transaction, error) {

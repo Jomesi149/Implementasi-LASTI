@@ -111,6 +111,32 @@ func (s *Service) Register(ctx context.Context, req RegisterRequest) (*RegisterR
 		fmt.Printf("[WALLET_SUCCESS] Created wallet %s for user %s\n", wallet.ID.String(), userID.String())
 	}
 
+	// Create default expense categories for new user
+	defaultCategories := []struct {
+		Name string
+		Kind string
+	}{
+		{Name: "Transportasi", Kind: "out"},
+		{Name: "Makan", Kind: "out"},
+		{Name: "Hiburan", Kind: "out"},
+		{Name: "Lain-lain", Kind: "out"},
+		{Name: "Gaji", Kind: "in"},
+		{Name: "Bonus", Kind: "in"},
+	}
+	for _, cat := range defaultCategories {
+		category := transaction.Category{
+			ID:     uuid.New(),
+			UserID: userID,
+			Name:   cat.Name,
+			Kind:   cat.Kind,
+		}
+		if err := s.transactionRepo.CreateCategory(ctx, category); err != nil {
+			fmt.Printf("[CATEGORY_ERROR] Failed to create category %s for user %s: %v\n", cat.Name, userID.String(), err)
+		} else {
+			fmt.Printf("[CATEGORY_SUCCESS] Created category %s for user %s\n", cat.Name, userID.String())
+		}
+	}
+
 	otpPayload, err := s.otpProvider.Generate(userID)
 	if err != nil {
 		return nil, fmt.Errorf("generate otp: %w", err)

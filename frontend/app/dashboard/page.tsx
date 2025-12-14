@@ -1,9 +1,10 @@
 "use client";
 
 import React, { useEffect, useState, useMemo } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { transactionsApi } from '../../lib/api/transactions';
-import type { Wallet, Transaction, CreateTransactionPayload } from '../../lib/types';
+import type { Wallet, Transaction, CreateTransactionPayload, Category } from '../../lib/types';
 import { getUserIdFromToken, getUsernameFromToken } from '../../lib/auth';
 
 function formatCurrency(v: string) {
@@ -20,6 +21,7 @@ export default function DashboardPage() {
   const router = useRouter();
   const [wallets, setWallets] = useState<Wallet[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [show, setShow] = useState(false);
   const [userId, setUserId] = useState<string>('');
@@ -70,6 +72,12 @@ export default function DashboardPage() {
         const t = await transactionsApi.listTransactions(50, userId);
         console.log('✅ Transactions API response:', t);
         setTransactions(t || []);
+
+        // Fetch categories
+        console.log('🔄 Calling listCategories API with userId:', userId);
+        const c = await transactionsApi.listCategories(userId);
+        console.log('✅ Categories API response:', c);
+        setCategories(c || []);
       } catch (err) {
         console.error('❌ Dashboard load error:', err);
       } finally {
@@ -92,7 +100,33 @@ export default function DashboardPage() {
 
   return (
     <div style={{ padding: 24, minHeight: '100vh', background: '#ffffff' }}>
-      <h1 style={{ color: '#1a1a1a', marginBottom: 24 }}>Welcome, {username || 'User'}</h1>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+        <h1 style={{ color: '#1a1a1a', margin: 0 }}>Welcome, {username || 'User'}</h1>
+        <div style={{ display: 'flex', gap: 12 }}>
+          <Link href="/analytics" style={{ 
+            padding: '10px 20px', 
+            background: '#8b5cf6', 
+            color: '#fff', 
+            borderRadius: 8, 
+            textDecoration: 'none',
+            fontWeight: 600,
+            fontSize: 14
+          }}>
+            📊 Analytics
+          </Link>
+          <Link href="/budget" style={{ 
+            padding: '10px 20px', 
+            background: '#f59e0b', 
+            color: '#fff', 
+            borderRadius: 8, 
+            textDecoration: 'none',
+            fontWeight: 600,
+            fontSize: 14
+          }}>
+            💰 Budget
+          </Link>
+        </div>
+      </div>
 
       <div style={{ display: 'flex', gap: 12, marginBottom: 24, alignItems: 'center' }}>
         <div style={{ padding: 20, border: '2px solid #e5e7eb', borderRadius: 12, background: '#f9fafb', flex: 1, display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 20 }}>
@@ -190,6 +224,7 @@ export default function DashboardPage() {
           }}>
             <TransactionForm
               wallets={wallets}
+              categories={categories}
               onClose={() => setShow(false)}
               onCreated={async (t) => {
                 setTransactions(prev => [t, ...prev]);
@@ -210,12 +245,27 @@ export default function DashboardPage() {
   );
 }
 
-function TransactionForm({ wallets, onClose, onCreated, userId }: { wallets: Wallet[]; onClose: () => void; onCreated: (t: Transaction) => void; userId: string }) {
+function TransactionForm({ wallets, categories, onClose, onCreated, userId }: { 
+  wallets: Wallet[]; 
+  categories: Category[];
+  onClose: () => void; 
+  onCreated: (t: Transaction) => void; 
+  userId: string 
+}) {
   // Menggunakan wallet pertama user secara otomatis (1 user = 1 wallet)
   const walletId = wallets[0]?.id ?? '';
   const [amount, setAmount] = useState('0');
   const [kind, setKind] = useState<'in'|'out'>('out');
+  const [categoryId, setCategoryId] = useState('');
   const [note, setNote] = useState('');
+
+  // Filter categories based on selected kind
+  const filteredCategories = categories.filter(c => c.kind === kind);
+
+  // Reset category when kind changes
+  useEffect(() => {
+    setCategoryId('');
+  }, [kind]);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -224,10 +274,11 @@ function TransactionForm({ wallets, onClose, onCreated, userId }: { wallets: Wal
       alert('Wallet tidak ditemukan. Silakan refresh dan pastikan wallet sudah terbuat saat register.');
       return;
     }
-    console.log('💰 Creating transaction with wallet:', walletId, 'amount:', amount, 'kind:', kind);
+    console.log('💰 Creating transaction with wallet:', walletId, 'amount:', amount, 'kind:', kind, 'category:', categoryId);
     const payload: CreateTransactionPayload = {
       userId,
       wallet_id: walletId,
+      category_id: categoryId || null,
       amount,
       kind,
       note: note || null,
@@ -240,6 +291,7 @@ function TransactionForm({ wallets, onClose, onCreated, userId }: { wallets: Wal
       onClose();
       // Reset form
       setAmount('0');
+      setCategoryId('');
       setNote('');
     } catch (err) {
       console.error('❌ Create transaction error:', err);
@@ -250,28 +302,6 @@ function TransactionForm({ wallets, onClose, onCreated, userId }: { wallets: Wal
   return (
     <form onSubmit={submit} style={{ width: '100%' }}>
       <h2 style={{ marginTop: 0, marginBottom: 24, color: '#1f2937', fontSize: 20, fontWeight: 600 }}>Tambah Transaksi</h2>
-
-      <div style={{ marginBottom: 16 }}>
-        <label style={{ display: 'block', marginBottom: 8, color: '#374151', fontWeight: 500, fontSize: 14 }}>Jumlah (Rp)</label>
-        <input 
-          type="number"
-          value={amount} 
-          onChange={e => setAmount(e.target.value)}
-          required
-          min="0"
-          step="1"
-          style={{ 
-            width: '100%', 
-            padding: '10px 12px', 
-            border: '2px solid #e5e7eb', 
-            borderRadius: 8,
-            fontSize: 14,
-            color: '#1f2937',
-            outline: 'none'
-          }}
-          placeholder="0"
-        />
-      </div>
 
       <div style={{ marginBottom: 16 }}>
         <label style={{ display: 'block', marginBottom: 8, color: '#374151', fontWeight: 500, fontSize: 14 }}>Tipe Transaksi</label>
@@ -319,6 +349,70 @@ function TransactionForm({ wallets, onClose, onCreated, userId }: { wallets: Wal
             <span style={{ color: kind === 'out' ? '#991b1b' : '#6b7280', fontWeight: 500 }}>Pengeluaran</span>
           </label>
         </div>
+      </div>
+
+      <div style={{ marginBottom: 16 }}>
+        <label style={{ display: 'block', marginBottom: 8, color: '#374151', fontWeight: 500, fontSize: 14 }}>
+          Kategori {kind === 'out' ? 'Pengeluaran' : 'Pemasukan'}
+        </label>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8 }}>
+          {filteredCategories.map(cat => (
+            <label key={cat.id} style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              padding: '10px 12px', 
+              border: '2px solid ' + (categoryId === cat.id ? (kind === 'out' ? '#ef4444' : '#10b981') : '#e5e7eb'), 
+              borderRadius: 8, 
+              cursor: 'pointer', 
+              background: categoryId === cat.id ? (kind === 'out' ? '#fee2e2' : '#d1fae5') : '#fff',
+              transition: 'all 0.2s'
+            }}>
+              <input 
+                type="radio" 
+                name="category"
+                value={cat.id} 
+                checked={categoryId === cat.id} 
+                onChange={() => setCategoryId(cat.id)}
+                style={{ marginRight: 8 }}
+              />
+              <span style={{ 
+                color: categoryId === cat.id ? (kind === 'out' ? '#991b1b' : '#065f46') : '#374151', 
+                fontWeight: 500,
+                fontSize: 14
+              }}>
+                {cat.name === 'Transportasi' && '🚗 '}
+                {cat.name === 'Makan' && '🍔 '}
+                {cat.name === 'Hiburan' && '🎮 '}
+                {cat.name === 'Lain-lain' && '📦 '}
+                {cat.name === 'Gaji' && '💼 '}
+                {cat.name === 'Bonus' && '🎁 '}
+                {cat.name}
+              </span>
+            </label>
+          ))}
+        </div>
+      </div>
+
+      <div style={{ marginBottom: 16 }}>
+        <label style={{ display: 'block', marginBottom: 8, color: '#374151', fontWeight: 500, fontSize: 14 }}>Jumlah (Rp)</label>
+        <input 
+          type="number"
+          value={amount} 
+          onChange={e => setAmount(e.target.value)}
+          required
+          min="1"
+          step="1"
+          style={{ 
+            width: '100%', 
+            padding: '10px 12px', 
+            border: '2px solid #e5e7eb', 
+            borderRadius: 8,
+            fontSize: 14,
+            color: '#1f2937',
+            outline: 'none'
+          }}
+          placeholder="0"
+        />
       </div>
 
       <div style={{ marginBottom: 24 }}>

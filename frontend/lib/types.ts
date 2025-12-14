@@ -49,6 +49,7 @@ export type Category = {
   user_id: string;
   name: string;
   kind: string;
+  created_at?: string;
 };
 
 export type Transaction = {
@@ -56,6 +57,7 @@ export type Transaction = {
   user_id: string;
   wallet_id: string;
   category_id?: string | null;
+  category_name?: string | null;
   amount: string;
   kind: string;
   note?: string | null;
@@ -71,4 +73,19 @@ export type CreateTransactionPayload = {
   kind: 'in' | 'out';
   note?: string | null;
   occurred_at?: string | null;
+};
+
+export type Budget = {
+  id: string;
+  user_id: string;
+  category_id: string;
+  category_name: string;
+  amount: string;
+  spent: string;
+  created_at: string;
+};
+
+export type SetBudgetPayload = {
+  category_id: string;
+  amount: string;
 };

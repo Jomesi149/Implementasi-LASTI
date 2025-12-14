@@ -3,6 +3,7 @@ package budget
 import (
 	"context"
 	"fmt"
+
 	"github.com/google/uuid"
 )
 
@@ -31,5 +32,12 @@ func (s *Service) SetBudget(ctx context.Context, userID uuid.UUID, categoryIDStr
 }
 
 func (s *Service) GetBudgets(ctx context.Context, userID uuid.UUID) ([]Budget, error) {
-	return s.repo.ListBudgets(ctx, userID)
+	fmt.Printf("[BUDGET_LIST] Fetching budgets for user: %s\n", userID.String())
+	budgets, err := s.repo.ListBudgets(ctx, userID)
+	if err != nil {
+		fmt.Printf("[BUDGET_LIST_ERROR] Error fetching budgets: %v\n", err)
+		return nil, err
+	}
+	fmt.Printf("[BUDGET_LIST_SUCCESS] Found %d budgets\n", len(budgets))
+	return budgets, nil
 }
