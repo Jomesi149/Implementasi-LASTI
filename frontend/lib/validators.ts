@@ -7,6 +7,7 @@ export const loginSchema = z.object({
 
 export const registerSchema = z.object({
   email: z.string().email('Enter a valid email'),
+  username: z.string().min(3, 'Min 3 characters').max(50, 'Max 50 characters'),
   password: z.string().min(8, 'Min 8 characters'),
   channel: z.enum(['email', 'sms', 'auth_app']),
   phoneNumber: z.string().optional(),

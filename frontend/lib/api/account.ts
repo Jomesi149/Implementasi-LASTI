@@ -26,6 +26,7 @@ async function request<T>(path: string, options: RequestInit, revalidate = 0): P
 
 export const accountApi = {
   register(payload: RegisterPayload) {
+    console.log('📤 Sending register payload:', payload);
     return request<RegisterResponse>('/account/register', {
       method: 'POST',
       body: JSON.stringify(payload),

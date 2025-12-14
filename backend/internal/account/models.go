@@ -24,7 +24,7 @@ type User struct {
 type RegisterRequest struct {
 	Email       string `json:"email" validate:"required,email"`
 	Username    string `json:"username" validate:"required,min=3,max=50"`
-	PhoneNumber string `json:"phoneNumber" validate:"omitempty,e164"`
+	PhoneNumber string `json:"phoneNumber"` // Optional, no strict validation
 	Password    string `json:"password" validate:"required,min=8"`
 	Channel     string `json:"channel" validate:"required,oneof=email sms auth_app"`
 }

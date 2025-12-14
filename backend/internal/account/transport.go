@@ -36,6 +36,14 @@ func (h *HTTPHandler) handleRegister(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// DEBUG: Log received payload
+	println("🔍 DEBUG: Register request received")
+	println("  Email:", req.Email)
+	println("  Username:", req.Username)
+	println("  PhoneNumber:", req.PhoneNumber)
+	println("  Password:", req.Password)
+	println("  Channel:", req.Channel)
+
 	result, err := h.service.Register(r.Context(), req)
 	if err != nil {
 		response.Error(w, http.StatusBadRequest, err.Error())
