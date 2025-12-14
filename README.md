@@ -3,13 +3,12 @@
 Aplikasi full-stack untuk mengelola dompet, transaksi, anggaran, dan analitik keuangan pribadi.
 
 Kelompok 04 - K02
-Muhammad Farhan/ 18223004
-Henrycus Hugatama Risaldy/ 18223008
-Mudzaki Kaarzaqiel Hakim / 18223024
-Darryl Rizqi/ 18223084
-Raditya Zaki Athaya/ 18223086
-Joan Melkior Silaen/ 18223102
-
+* Muhammad Farhan/ 18223004 
+* Henrycus Hugatama Risaldy/ 18223008
+* Mudzaki Kaarzaqiel Hakim / 18223024
+* Darryl Rizqi/ 18223084
+* Raditya Zaki Athaya/ 18223086
+* Joan Melkior Silaen/ 18223102
 
 ## Tech Stack
 
@@ -96,14 +95,14 @@ go run ./cmd/api
 
 Server listen di `http://localhost:8080`. Uji dengan membuka `http://localhost:8080/health` (respon `{"status":"ok"}`).
 
-### 1. Frontend Setup
+1. Frontend Setup
 
 ```bash
 cd frontend
 npm install
 ```
 
-### 2. Start Frontend
+2. Start Frontend
 
 ```bash
 cd frontend
