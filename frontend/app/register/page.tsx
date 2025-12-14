@@ -45,7 +45,7 @@ export default function RegisterPage() {
   return (
     <AuthShell
       title="Create Your Account"
-      subtitle="Provision identity, set OTP preferences, and join Budgetin."
+      subtitle="Track your spending, master your budget."
       footer={
         <p>
           Already have access? <Link href="/login">Return to login</Link>
